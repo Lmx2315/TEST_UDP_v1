@@ -37,30 +37,32 @@ namespace test_UDP_v1
             Timer1.Interval = new TimeSpan(0, 0, 0, 0, 100);
 
             Timer2.Tick += new EventHandler(Timer2_Tick);
-            Timer2.Interval = new TimeSpan(0, 0, 0, 0, 100);
+            Timer2.Interval = new TimeSpan(0, 0, 0, 0, 500);
         }
 
         private void button_Click(object sender, RoutedEventArgs e)
         {
-            my_ip = IPAddress.Parse(my_ip_box.Text);
-            my_port = UInt16.Parse(my_port_box.Text);
-            dest_ip = IPAddress.Parse(adr_ip_box.Text);
-            dest_port = UInt16.Parse(adr_port_box.Text);
+            my_ip     = IPAddress.Parse(my_ip_box.Text   );
+            my_port   = UInt16.Parse   (my_port_box.Text );
+            dest_ip   = IPAddress.Parse(adr_ip_box.Text  );
+            dest_port = UInt16.Parse   (adr_port_box.Text);
             timer = 0;
+            
             Debug.WriteLine("...");
             if ((Convert.ToString(button.Content)) == "START")
             {
                 Timer1.Start();
                 Timer2.Start();
                 button.Content = "STOP";
+                textBox_buf_n.IsEnabled = false;
             }
             else
             {
                 Timer1.Stop();
                 Timer2.Stop();
                 button.Content = "START";
+                textBox_buf_n.IsEnabled = true;
             }
-
         }
 
 
@@ -79,9 +81,8 @@ namespace test_UDP_v1
                 fig1.PlotData(time_series);
                 fig1.Show();
                 FLAG_DISPAY = "";
-    //            Debug.WriteLine("*");
+    //          Debug.WriteLine("*");
             }
-
         }
         int INDEX = 0;
         private void SENDER()
@@ -97,11 +98,11 @@ namespace test_UDP_v1
                 BUF = Convert.ToInt32(textBox_buf_n.Text);
                 Int32[] Z = new Int32[BUF];
                 Z=GEN_F0();//расчитываем отсчёты
-                while (INDEX< BUF)
+                while (INDEX< (BUF-360))
                 {
                     data = FORMER(Z);
                     int number_bytes = client.Send(data, data.Length);
-       //             Debug.WriteLine("INDEX:"+ INDEX);
+       //           Debug.WriteLine("INDEX:"+ INDEX);
                 }
                 INDEX = 0;
                 client.Close();
@@ -139,11 +140,9 @@ namespace test_UDP_v1
                 smpl_i[i] = Convert.ToInt32(Math.Floor(A * Math.Sin(2 * pi * FREQ * (i / Fclk))));
                 time_series[i] = Convert.ToDouble(smpl_i[i]);
                 Z[i] = (smpl_q[i] << 16) + (smpl_i[i]&0xffff);
-            }         
-
+            }
+            timer = 0;
             FLAG_DISPAY = "1";
-         
-
             return Z;
         }
 
@@ -156,7 +155,7 @@ namespace test_UDP_v1
             timer++;
             //------заголовок пакета UDP
             m[0] = 0;
-            m[1] = 0;//тут номер канала 
+            m[1] = Convert.ToByte(textBox_ch.Text);//тут номер канала 
             m[2] = Convert.ToByte((timer >> 24) & 0xff);//тут время пакета
             m[3] = Convert.ToByte((timer >> 16) & 0xff);// --//--
             m[4] = Convert.ToByte((timer >> 8) & 0xff);// --//--
